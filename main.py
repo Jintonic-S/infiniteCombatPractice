@@ -1,5 +1,5 @@
 # Programme permettant un combat entre un héros et une infinité de monstres
-# Auteur: Jintonic
+# Auteur= Jintonic
 # Date: 2024
 from random import randint
 from math import ceil
