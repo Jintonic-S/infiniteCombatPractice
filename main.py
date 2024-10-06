@@ -5,64 +5,75 @@
 from random import randint
 from math import ceil
 
-PV_INITIAUX_HÉROS = 100 # Points de vie initiaux du héros
-PV_INITIAUX_MONSTRE = 80 # Points de vie initiaux du monstre
+# Constantes
+PV_INITIAUX_HÉROS = 800000  # Points de vie initiaux du héros
+PV_INITIAUX_MONSTRE = 80  # Points de vie initiaux du monstre
+CHANCE_CRITIQUE = 5  # Pourcentage de chance de coup critique
+POTION_COOLDOWN = 4  # Nombre de tours avant de pouvoir utiliser une potion
+POTION_POURCENTAGE = 0.3  # Pourcentage de PV restaurés par la potion
 
-points_vie_joueur: int # Points de vie du héros au cours du combat
-points_vie_monstre: int # Points de vie du monstre au cours du combat
-dégâts_joueur: int # Dégâts infligés par le héros
-dégâts_monstre: int # Dégâts infligés par le monstre
-nb_tours: int
-taux_critique: int # Valeur du critique
-victoire: int
-nb_monstre: int # Numéro du monstre
-pv_potion: int # PV rendu par potion
+def calculer_dégâts(dégâts_min, dégâts_max, critique_chance):
+    """Calcule les dégâts infligés, en tenant compte des coups critiques."""
+    dégâts = randint(dégâts_min, dégâts_max)
+    if randint(1, 100) <= critique_chance:
+        dégâts = ceil(dégâts * 1.5)
+        critique = True
+    else:
+        critique = False
+    return dégâts, critique
 
-pv_potion = ceil(PV_INITIAUX_HÉROS * 0.3)
+def tour_héros(tour, héros_pv, monstre_pv, potion_pv):
+    """Gère le tour du héros, y compris l'utilisation des potions."""
+    if tour % POTION_COOLDOWN == 0 and héros_pv < PV_INITIAUX_HÉROS:
+        soins = min(potion_pv, PV_INITIAUX_HÉROS - héros_pv)
+        héros_pv += soins
+        print(f"Le héros boit une potion de soin et récupère {soins} points de vie !")
+    else:
+        dégâts, critique = calculer_dégâts(10, 20, CHANCE_CRITIQUE)
+        action = "fait un coup critique et inflige" if critique else "inflige"
+        print(f"Le héros {action} {dégâts} dégâts au monstre ({nb_monstre}).")
+        monstre_pv -= dégâts
+    return héros_pv, monstre_pv
+
+def tour_monstre(monstre_num, héros_pv):
+    """Gère le tour du monstre."""
+    dégâts_min = 5 * monstre_num
+    dégâts_max = 15 * monstre_num
+    dégâts, critique = calculer_dégâts(dégâts_min, dégâts_max, CHANCE_CRITIQUE)
+    action = "fait un coup critique et inflige" if critique else "inflige"
+    print(f"Le monstre ({monstre_num}) {action} {dégâts} dégâts au héros.")
+    héros_pv -= dégâts
+    return héros_pv
+
+# Initialisation des variables
 points_vie_joueur = PV_INITIAUX_HÉROS
 points_vie_monstre = PV_INITIAUX_MONSTRE
+pv_potion = ceil(PV_INITIAUX_HÉROS * POTION_POURCENTAGE)
 nb_tours = 1
-victoire = 0
 nb_monstre = 1
 
-while points_vie_joueur >= 0: # and points_vie_monstre >= 0 : Condition de combat
+# Boucle principale du jeu
+while points_vie_joueur > 0:
     print(f"Tour {nb_tours} :")
-    dégâts_joueur = randint(10, 20)
-    taux_critique = randint(0, 100)
-
-    if nb_tours % 4 == 0 and points_vie_joueur != PV_INITIAUX_HÉROS: # Permet l'utilisation d'une potion
-        print(f"Le héros boit une potion de soin et récupère {min(pv_potion, (PV_INITIAUX_HÉROS - points_vie_joueur))} points de vie!")
-        points_vie_joueur += (min(pv_potion, (PV_INITIAUX_HÉROS - points_vie_joueur)))
-    else:
-        if taux_critique <= 5: # Détermination si coup critique
-            dégâts_joueur = ceil(dégâts_joueur * 1.5)
-            print(f"Le héros fait un coup critique et inflige {dégâts_joueur} dégâts au monstre  ({nb_monstre}).")
-        else:
-            print(f"Le héros inflige {dégâts_joueur} dégâts au monstre ({nb_monstre}).")
-        points_vie_monstre -= dégâts_joueur
-
-    if points_vie_monstre >= 0: # Vérifie si le monstre est encore en vie
-        dégâts_monstre = randint(5 * nb_monstre, 15 * nb_monstre) # Détermine les dégâts du monstre
-        taux_critique = randint(0, 100) # Détermine la valeur de taux critique
-        if taux_critique <= 5: # Détermine s'il y a coup critique
-            dégâts_monstre = ceil(dégâts_monstre * 1.5)
-            print(f"Le monstre ({nb_monstre}) fait un coup critique et inflige {dégâts_monstre} dégâts au héros.")
-        else:
-            print(f"Le monstre ({nb_monstre}) inflige {dégâts_monstre} dégâts au héros.")
-        points_vie_joueur -= dégâts_monstre
-    print(f"Points de vie restants du héros: {points_vie_joueur}.")
-    print(f"Points de vie restants du monstre ({nb_monstre}) : {points_vie_monstre}.")
-    print()
-    nb_tours += 1
-
-    if points_vie_joueur <= 0: # Vérifie si le héros perd
-        print("Vous avez perdu, le héros à été vaincu.")
+    # Tour du héros
+    points_vie_joueur, points_vie_monstre = tour_héros(nb_tours, points_vie_joueur, points_vie_monstre, pv_potion)
+    # Vérifie si le monstre est vaincu
+    if points_vie_monstre <= 0:
+        print(f"Vous avez gagné, le monstre {nb_monstre} a été vaincu !")
+        nb_monstre += 1
+        points_vie_monstre = nb_monstre * PV_INITIAUX_MONSTRE
+        print("Le prochain monstre arrive.\n")
+        nb_tours += 1
+        continue
+    # Tour du monstre
+    points_vie_joueur = tour_monstre(nb_monstre, points_vie_joueur)
+    # Affichage des points de vie restants
+    print(f"Points de vie restants du héros : {points_vie_joueur}.")
+    print(f"Points de vie restants du monstre ({nb_monstre}) : {points_vie_monstre}.\n")
+    # Vérifie si le héros est vaincu
+    if points_vie_joueur <= 0:
+        print("Vous avez perdu, le héros a été vaincu.")
         break
-
-    if points_vie_monstre <= 0: # Vérifie si le monstre perd
-        print(f"Vous avez gagné, le monstre {nb_monstre} à été vaincu!")
-        print("Le prochain monstre arrive.", end="\n\n")
-        nb_monstre += 1 # Ajoute un monstre
-        points_vie_monstre = nb_monstre * PV_INITIAUX_MONSTRE # Ajuste les pv du nouveau monstre
+    nb_tours += 1
 
 print("Game Over !")
