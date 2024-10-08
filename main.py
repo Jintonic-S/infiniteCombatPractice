@@ -21,7 +21,7 @@ ARMES = {
 }
 
 def choisir_arme():
-    """Permet au joueur de choisir une arme parmi les disponibles."""
+    #Permet au joueur de choisir une arme parmi les disponibles.
     print("Choisissez votre arme :")
     for idx, (arme, stats) in enumerate(ARMES.items(), 1):
         print(f"{idx}. {arme} (Dégâts : {stats['dégâts_min']} - {stats['dégâts_max']})")
@@ -36,7 +36,7 @@ def choisir_arme():
             print("Choix invalide. Veuillez réessayer.")
 
 def calculer_dégâts(dégâts_min, dégâts_max, critique_chance):
-    """Calcule les dégâts infligés, en tenant compte des coups critiques."""
+    #Calcule les dégâts infligés, en tenant compte des coups critiques.
     dégâts = randint(dégâts_min, dégâts_max)
     if randint(1, 100) <= critique_chance:
         dégâts = ceil(dégâts * 1.5)
@@ -46,7 +46,7 @@ def calculer_dégâts(dégâts_min, dégâts_max, critique_chance):
     return dégâts, critique
 
 def tour_héros(tour, héros_pv, monstre_pv, potion_pv, arme_stats, nb_monstre):
-    """Gère le tour du héros, y compris l'utilisation des potions et l'attaque avec l'arme."""
+    #Gère le tour du héros, y compris l'utilisation des potions et l'attaque avec l'arme
     if tour % POTION_COOLDOWN == 0 and héros_pv < PV_INITIAUX_HÉROS:
         soins = min(potion_pv, PV_INITIAUX_HÉROS - héros_pv)
         héros_pv += soins
@@ -59,7 +59,7 @@ def tour_héros(tour, héros_pv, monstre_pv, potion_pv, arme_stats, nb_monstre):
     return héros_pv, monstre_pv
 
 def tour_monstre(monstre_num, héros_pv):
-    """Gère le tour du monstre."""
+    #Gère le tour du monstre
     dégâts_min = 5 * monstre_num
     dégâts_max = 15 * monstre_num
     dégâts, critique = calculer_dégâts(dégâts_min, dégâts_max, CHANCE_CRITIQUE)
